@@ -1,0 +1,1 @@
+  Rangakain ini saya buat untuk mendeteksi daya yang tersimpan pada baterai PLTS yang nanti saat baterai drop listrik akan otomatis berpindah ke jalur PLN yang mana saya menggunakan TRIAC dengan optocoupler untuk meakukan pemutusan arus listrik dan dengan arduino nano untuk kontrolernya.
