@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test Print RawBT</title>
+<style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#1d2330;--muted:#6b7280;--line:#e3e6ea;--acc:#0f766e;--acc2:#115e59;--paper:#fffef8}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d2128;--ink:#e8eaee;--muted:#9aa3af;--line:#2d333c;--acc:#14b8a6;--acc2:#0d9488;--paper:#f7f5ec}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+  h1{font-size:20px;margin:4px 0 2px}
+  .sub{color:var(--muted);margin:0 0 16px;font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:820px){.grid{grid-template-columns:1.2fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card h2{font-size:15px;margin:0 0 10px}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+  input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font:inherit}
+  textarea{min-height:90px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  .items .it{display:grid;grid-template-columns:1fr 56px 96px 34px;gap:6px;margin-bottom:6px}
+  .items input{padding:8px}
+  .chk{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}
+  .chk label{display:flex;align-items:center;gap:6px;margin:0;color:var(--ink);font-size:14px}
+  .chk input{width:auto}
+  button{font:inherit;border:0;border-radius:8px;padding:10px 14px;cursor:pointer}
+  .btn{background:var(--acc);color:#fff;font-weight:600}
+  .btn:active{background:var(--acc2)}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .del{background:transparent;border:1px solid var(--line);color:var(--muted);padding:0}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .actions .btn{flex:1 1 140px}
+  .paper{background:var(--paper);color:#222;font-family:ui-monospace,Consolas,"Courier New",monospace;font-size:12px;line-height:1.35;padding:14px 10px;border-radius:4px;white-space:pre;overflow-x:auto;box-shadow:0 1px 3px rgba(0,0,0,.15);margin:0 auto;width:fit-content;max-width:100%}
+  .note{font-size:12px;color:var(--muted);margin-top:10px}
+  .log{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--muted);word-break:break-all;max-height:90px;overflow:auto;margin-top:8px}
+  code{background:rgba(127,127,127,.15);padding:1px 4px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Test Print RawBT</h1>
+  <p class="sub">Buka halaman ini di Chrome Android yang sudah terpasang aplikasi N Printer (atau RawBT) dan sudah tersambung ke printer thermal.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Pengaturan</h2>
+        <div class="row">
+          <div>
+            <label>Ukuran kertas</label>
+            <select id="paper">
+              <option value="32">58 mm (32 kolom)</option>
+              <option value="48">80 mm (48 kolom)</option>
+            </select>
+          </div>
+          <div>
+            <label>Metode kirim</label>
+            <select id="method">
+              <option value="nprinter">N Printer (tanpa watermark)</option>
+              <option value="intent">RawBT - intent:</option>
+              <option value="scheme">rawbt:base64</option>
+            </select>
+          </div>
+        </div>
+        <div class="chk">
+          <label><input type="checkbox" id="optQr" checked> QR code</label>
+          <label><input type="checkbox" id="optCut" checked> Potong kertas</label>
+          <label><input type="checkbox" id="optDrawer"> Buka laci kasir</label>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>Struk</h2>
+        <div class="row">
+          <div><label>Nama toko</label><input id="shop" value="TOKO JLM"></div>
+          <div><label>No. transaksi</label><input id="trx"></div>
+        </div>
+        <label>Alamat / info</label><input id="addr" value="Jl. Contoh No. 1 - Telp 0812xxxx">
+        <label>Item (nama, qty, harga)</label>
+        <div class="items" id="items"></div>
+        <button class="ghost" id="addItem" type="button">+ Tambah item</button>
+        <div class="row">
+          <div><label>Bayar (Rp)</label><input id="paid" type="number" value="100000"></div>
+          <div><label>Isi QR code</label><input id="qrText" value="https://jlm.net.id"></div>
+        </div>
+        <label>Catatan kaki</label><input id="footer" value="Terima kasih atas kunjungan Anda">
+        <div class="actions">
+          <button class="btn" id="printReceipt">Cetak Struk</button>
+          <button class="ghost" id="printTest">Test Printer</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>Teks bebas</h2>
+        <textarea id="freeText">Halo dari RawBT!
+Baris kedua.</textarea>
+        <div class="actions"><button class="btn" id="printFree">Cetak Teks</button></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Pratinjau</h2>
+        <div class="paper" id="preview"></div>
+        <p class="note">Pratinjau hanya perkiraan. Ukuran huruf besar dan QR code tampil sebagai penanda.</p>
+        <div class="log" id="log"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>Cara pakai</h2>
+        <ol style="margin:0;padding-left:18px;font-size:13px">
+          <li>Install <b>NPrinter.apk</b> (atau RawBT dari Play Store).</li>
+          <li>Buka aplikasinya → Pilih Printer Bluetooth → Test Print.</li>
+          <li>Buka halaman ini di <b>Chrome Android</b>, lalu tekan <b>Cetak Struk</b>.</li>
+          <li>Kalau muncul pilihan aplikasi, pilih RawBT. Kalau tidak ada respon, ganti metode kirim.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== ESC/POS builder ===== */
+class Esc {
+  constructor(){ this.b = []; }
+  raw(...a){ this.b.push(...a); return this; }
+  init(){ return this.raw(0x1B,0x40); }
+  align(n){ return this.raw(0x1B,0x61,{left:0,center:1,right:2}[n]); }
+  bold(on){ return this.raw(0x1B,0x45,on?1:0); }
+  size(w,h){ return this.raw(0x1D,0x21,((w-1)<<4)|(h-1)); }
+  text(s){
+    for (const ch of String(s)) { const c = ch.charCodeAt(0); this.b.push(c < 128 ? c : 0x3F); }
+    return this;
+  }
+  line(s=''){ return this.text(s).raw(0x0A); }
+  feed(n=1){ return this.raw(0x1B,0x64,n); }
+  cut(){ return this.raw(0x1D,0x56,0x41,0x03); }
+  drawer(){ return this.raw(0x1B,0x70,0x00,0x19,0xFA); }
+  qr(data, size=6){
+    const d = []; for (const ch of data) d.push(ch.charCodeAt(0) & 0xFF);
+    const len = d.length + 3;
+    this.raw(0x1D,0x28,0x6B,0x04,0x00,0x31,0x41,0x32,0x00);       // model 2
+    this.raw(0x1D,0x28,0x6B,0x03,0x00,0x31,0x43,size);            // module size
+    this.raw(0x1D,0x28,0x6B,0x03,0x00,0x31,0x45,0x31);            // error correction M
+    this.raw(0x1D,0x28,0x6B,len & 0xFF,(len>>8)&0xFF,0x31,0x50,0x30,...d); // store
+    return this.raw(0x1D,0x28,0x6B,0x03,0x00,0x31,0x51,0x30);     // print
+  }
+  base64(){
+    let s = ''; for (const x of this.b) s += String.fromCharCode(x);
+    return btoa(s);
+  }
+}
+
+/* ===== Helpers ===== */
+const $ = id => document.getElementById(id);
+const rp = n => Math.round(n).toLocaleString('id-ID');
+const cols = () => +$('paper').value;
+const lr = (l, r, w = cols()) => {
+  const space = w - l.length - r.length;
+  return space >= 1 ? l + ' '.repeat(space) + r : l.slice(0, w - r.length - 1) + ' ' + r;
+};
+const center = (s, w = cols()) => {
+  s = s.slice(0, w); const p = Math.floor((w - s.length) / 2);
+  return ' '.repeat(p) + s;
+};
+const wrap = (s, w = cols()) => {
+  const out = []; let cur = '';
+  for (const word of String(s).split(/\s+/)) {
+    if ((cur + ' ' + word).trim().length > w) { if (cur) out.push(cur); cur = word; }
+    else cur = (cur + ' ' + word).trim();
+  }
+  if (cur) out.push(cur);
+  return out.length ? out : [''];
+};
+const dash = () => '-'.repeat(cols());
+const now = () => {
+  const d = new Date(), z = n => String(n).padStart(2,'0');
+  return `${z(d.getDate())}/${z(d.getMonth()+1)}/${d.getFullYear()} ${z(d.getHours())}:${z(d.getMinutes())}`;
+};
+
+/* ===== Items ===== */
+const defaults = [['Kopi Susu',2,18000],['Roti Bakar Coklat',1,15000],['Air Mineral',3,5000]];
+function addItem(n='', q=1, p=0){
+  const div = document.createElement('div'); div.className = 'it';
+  div.innerHTML = `<input placeholder="Nama" value="${n}"><input type="number" min="1" value="${q}"><input type="number" min="0" value="${p}"><button class="del" type="button" title="Hapus">✕</button>`;
+  div.querySelector('.del').onclick = () => { div.remove(); render(); };
+  div.querySelectorAll('input').forEach(i => i.oninput = render);
+  $('items').appendChild(div);
+}
+function getItems(){
+  return [...document.querySelectorAll('#items .it')].map(r => {
+    const [n,q,p] = r.querySelectorAll('input');
+    return { name: n.value.trim(), qty: +q.value || 0, price: +p.value || 0 };
+  }).filter(i => i.name && i.qty > 0);
+}
+
+/* ===== Receipt (returns {esc, preview}) ===== */
+function buildReceipt(){
+  const w = cols(), e = new Esc().init(), pv = [];
+  const L = (s) => { e.line(s); pv.push(s); };
+  const items = getItems();
+  const total = items.reduce((a,i) => a + i.qty * i.price, 0);
+  const paid = +$('paid').value || 0;
+
+  e.align('center').bold(true).size(2,2); e.line($('shop').value);
+  pv.push(center('[ ' + $('shop').value + ' ]'));
+  e.size(1,1).bold(false);
+  wrap($('addr').value).forEach(s => { e.line(s); pv.push(center(s)); });
+  e.align('left');
+  L(dash());
+  L(lr('No: ' + $('trx').value, ''));
+  L(lr('Tgl: ' + now(), ''));
+  L(dash());
+  items.forEach(i => {
+    wrap(i.name).forEach(s => L(s));
+    L(lr(`  ${i.qty} x ${rp(i.price)}`, rp(i.qty * i.price)));
+  });
+  L(dash());
+  e.bold(true); L(lr('TOTAL', 'Rp ' + rp(total))); e.bold(false);
+  L(lr('Bayar', 'Rp ' + rp(paid)));
+  L(lr('Kembali', 'Rp ' + rp(Math.max(0, paid - total))));
+  L(dash());
+  e.align('center');
+  if ($('optQr').checked && $('qrText').value) {
+    e.qr($('qrText').value, w === 48 ? 7 : 5); e.line('');
+    pv.push(center('[QR: ' + $('qrText').value.slice(0, w - 6) + ']'), '');
+  }
+  wrap($('footer').value).forEach(s => { e.line(s); pv.push(center(s)); });
+  e.align('left').feed(3);
+  if ($('optCut').checked) e.cut();
+  if ($('optDrawer').checked) e.drawer();
+  return { esc: e, preview: pv.join('\n') };
+}
+
+function buildTest(){
+  const e = new Esc().init(), w = cols();
+  e.align('center').bold(true).line('TEST PRINTER').bold(false).line(now()).line('-'.repeat(w));
+  e.align('left').line('Rata kiri');
+  e.align('center').line('Rata tengah');
+  e.align('right').line('Rata kanan');
+  e.align('left').bold(true).line('Teks tebal').bold(false);
+  e.size(2,1).line('Lebar 2x').size(1,2).line('Tinggi 2x').size(2,2).line('Besar 2x').size(1,1);
+  e.line('-'.repeat(w));
+  e.line('0123456789'.repeat(Math.ceil(w/10)).slice(0,w));
+  e.line(`Lebar kertas: ${w} kolom`);
+  e.feed(3);
+  if ($('optCut').checked) e.cut();
+  return e;
+}
+
+function buildFree(){
+  const e = new Esc().init();
+  $('freeText').value.split('\n').forEach(l => wrap(l).forEach(s => e.line(s)));
+  e.feed(3);
+  if ($('optCut').checked) e.cut();
+  return e;
+}
+
+/* ===== Send to RawBT ===== */
+function send(esc){
+  const b64 = esc.base64();
+  const m = $('method').value;
+  const url = m === 'nprinter'
+    ? `intent:base64,${b64}#Intent;scheme=nprinter;package=id.nprinter.app;end;`
+    : m === 'intent'
+    ? `intent:base64,${b64}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`
+    : `rawbt:base64,${b64}`;
+  $('log').textContent = `Dikirim ${esc.b.length} byte (${$('method').value}) • ${new Date().toLocaleTimeString('id-ID')}`;
+  window.location.href = url;
+}
+
+function render(){ $('preview').textContent = buildReceipt().preview; }
+
+/* ===== Init ===== */
+$('trx').value = 'TRX' + Date.now().toString().slice(-6);
+defaults.forEach(d => addItem(...d));
+$('addItem').onclick = () => { addItem('Item baru', 1, 10000); render(); };
+document.querySelectorAll('input,select').forEach(el => el.addEventListener('input', render));
+$('printReceipt').onclick = () => send(buildReceipt().esc);
+$('printTest').onclick = () => send(buildTest());
+$('printFree').onclick = () => send(buildFree());
+render();
+</script>
+</body>
+</html>
